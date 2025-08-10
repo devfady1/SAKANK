@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}انتظار التحقق{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="mb-4 text-warning"><i class="fas fa-clock"></i> جاري مراجعة بياناتك</h2>
+                    <p class="lead">شكراً لإتمام جميع الخطوات المطلوبة. فريق المنصة يقوم الآن بمراجعة مستنداتك وعقد الشراكة.</p>
+                    <hr>
+                    <ul class="list-unstyled mb-4">
+                        <li><i class="fas fa-id-card me-2"></i> حالة البطاقة الشخصية: <span class="fw-bold text-info">بانتظار الموافقة</span></li>
+                        <li><i class="fas fa-file-contract me-2"></i> حالة وثيقة الملكية: <span class="fw-bold text-info">بانتظار الموافقة</span></li>
+                        <li><i class="fas fa-file-signature me-2"></i> حالة عقد الشراكة: <span class="fw-bold text-info">تمت الموافقة</span></li>
+                    </ul>
+                    <div class="alert alert-info">
+                        سيتم إعلامك فور الموافقة على جميع المستندات. يرجى الانتظار وعدم محاولة الوصول للوحة التحكم حتى يتم التحقق.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

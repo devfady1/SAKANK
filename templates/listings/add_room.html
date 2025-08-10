@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إضافة غرفة جديدة - سكنك{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-door-open me-2"></i>
+                        إضافة غرفة جديدة
+                    </h4>
+                    <small>للشقة: {{ apartment.name }}</small>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {# ملخص أخطاء عام للنموذج #}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for err in form.non_field_errors %}
+                                    <li>{{ err }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>{{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bed_count.id_for_label }}" class="form-label">
+                                    <i class="fas fa-bed me-1"></i>{{ form.bed_count.label }}
+                                </label>
+                                {{ form.bed_count }}
+                                {% if form.bed_count.errors %}
+                                    <div class="text-danger small">{{ form.bed_count.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>{{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bed_price.id_for_label }}" class="form-label">
+                                    <i class="fas fa-money-bill-wave me-1"></i>{{ form.bed_price.label }}
+                                </label>
+                                {{ form.bed_price }}
+                                {% if form.bed_price.errors %}
+                                    <div class="text-danger small">{{ form.bed_price.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.room_image.id_for_label }}" class="form-label">
+                                    <i class="fas fa-camera me-1"></i>{{ form.room_image.label }}
+                                </label>
+                                {{ form.room_image }}
+                                {% if form.room_image.errors %}
+                                    <div class="text-danger small">{{ form.room_image.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">يفضل أن تكون الصورة بحجم 800x600 بكسل أو أكبر</div>
+                            </div>
+                        </div>
+
+                        
+
+                        
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> بعد إضافة الغرفة، سيتم إنشاء الأسرة تلقائياً حسب العدد المحدد. يمكنك تعديل تفاصيل كل سرير لاحقاً من لوحة التحكم.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'listings:seller_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right me-2"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>حفظ الغرفة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // معاينة الصورة قبل الرفع
+    document.getElementById('{{ form.room_image.id_for_label }}').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let preview = document.getElementById('image-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.id = 'image-preview';
+                    preview.className = 'mt-2';
+                    e.target.parentNode.appendChild(preview);
+                }
+                preview.innerHTML = `
+                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                    <p class="small text-muted mt-1">معاينة الصورة المختارة</p>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // تحديث السعر الإجمالي عند تغيير عدد الأسرة أو السعر الشهري
+    function updateTotalPrice() {
+        const bedCount = document.getElementById('{{ form.bed_count.id_for_label }}').value;
+        const monthlyPrice = document.getElementById('{{ form.bed_price.id_for_label }}').value;
+        
+        if (bedCount && monthlyPrice) {
+            const totalPrice = bedCount * monthlyPrice;
+            let priceInfo = document.getElementById('price-info');
+            if (!priceInfo) {
+                priceInfo = document.createElement('div');
+                priceInfo.id = 'price-info';
+                priceInfo.className = 'alert alert-light mt-2';
+                document.getElementById('{{ form.monthly_price.id_for_label }}').parentNode.appendChild(priceInfo);
+            }
+            priceInfo.innerHTML = `
+                <i class="fas fa-calculator me-2"></i>
+                <strong>إجمالي الإيراد المتوقع:</strong> ${totalPrice} ريال/شهر
+                <br><small class="text-muted">(${bedCount} سرير × ${monthlyPrice} ريال)</small>
+            `;
+        }
+    }
+
+    document.getElementById('{{ form.bed_count.id_for_label }}').addEventListener('input', updateTotalPrice);
+    document.getElementById('{{ form.bed_price.id_for_label }}').addEventListener('input', updateTotalPrice);
+</script>
+{% endblock %}

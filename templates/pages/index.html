@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}سكنك - منصة حجز الشقق{% endblock %}
+
+{% autoescape on %}
+{% block content %}
+<!-- القسم الرئيسي -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">مرحباً بك في سكنك</h1>
+                <p class="lead mb-4">منصة حجز الشقق الرائدة في اسيوط - اسيوط الجديده. اعثر على سكنك المثالي بسهولة وأمان.</p>
+                <a href="{% url 'listings:apartment_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-search me-2"></i>ابحث عن شقة
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                     class="img-fluid rounded shadow" alt="شقق للإيجار">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج البحث -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4">ابحث عن شقتك المثالية</h3>
+                    <form method="get" action="{% url 'pages:index' %}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">البحث</label>
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="اسم الشقة أو الوصف" value="{{ search_query }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">الموقع</label>
+                                <select name="location" class="form-select">
+                                    <option value="">جميع المواقع</option>
+                                    {% for location in locations %}
+                                        <option value="{{ location.id }}" 
+                                                {% if location.id|stringformat:"s" == selected_location %}selected{% endif %}>
+                                            {{ location.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الشقق المميزة -->
+<div class="container my-5">
+    <h2 class="text-center mb-5">الشقق المميزة</h2>
+    <div class="row">
+        {% for apartment in apartments %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm rounded-4">
+                    <div style="background: linear-gradient(135deg, #fffbe6 0%, #ffe5b4 100%); border-radius: 1.5rem 1.5rem 0 0; position: relative;">
+                        {% if apartment.main_image %}
+                            <img src="{{ apartment.main_image.url }}" class="card-img-top rounded-4 border border-2" 
+                                 alt="صورة الشقة" style="height: 170px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center rounded-4 border border-2" 
+                                 style="height: 170px;">
+                                <i class="fas fa-home fa-3x text-warning"></i>
+                            </div>
+                        {% endif %}
+                        <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 shadow" style="font-size:1rem;">{{ apartment.get_min_price }} جنيه / شهر</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-primary mb-2" style="font-size:1.2rem;">{{ apartment.name }}</h5>
+                        <p class="text-muted mb-1 small">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ apartment.location.name }}
+                        </p>
+                        <p class="card-text flex-grow-1 mb-2 text-dark small">{{ apartment.description|truncatewords:15 }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark border border-1 px-2">{{ apartment.rooms.count }} غرفة</span>
+                            <a href="{% url 'listings:apartment_detail' apartment.pk %}" class="btn btn-warning rounded-4 fw-bold py-2 shadow-sm">
+                                <i class="fas fa-info-circle me-1"></i> التفاصيل
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا توجد شقق متاحة حالياً.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if apartments %}
+        <div class="text-center mt-4">
+            <a href="{% url 'listings:apartment_list' %}" class="btn btn-outline-primary">
+                عرض جميع الشقق <i class="fas fa-arrow-left me-2"></i>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- المميزات -->
+<div class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">لماذا تختار سكنك؟</h2>
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                </div>
+                <h4>آمان وموثوقية</h4>
+                <p>جميع الشقق محققة ومضمونة من قبل فريقنا المختص</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-credit-card fa-3x text-primary"></i>
+                </div>
+                <h4>دفع آمن</h4>
+                <p>نظام دفع آمن ومشفر باستخدام أحدث التقنيات</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-headset fa-3x text-primary"></i>
+                </div>
+                <h4>دعم 24/7</h4>
+                <p>فريق دعم متاح على مدار الساعة لمساعدتك</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- آراء العملاء -->
+<div class="container py-5">
+    <h2 class="text-center mb-5">آراء عملائنا</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3" width="48" height="48" alt="عميل">
+                    <div>
+                        <strong>محمد عبدالعزيز</strong>
+                        <span class="d-block text-muted small">طالب جامعي</span>
+                    </div>
+                </div>
+                <p class="mb-0">أحسن موقع سكن جربته، كل حاجة واضحة والدعم سريع جداً!</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle me-3" width="48" height="48" alt="عميلة">
+                    <div>
+                        <strong>سارة محمود</strong>
+                        <span class="d-block text-muted small">موظفة</span>
+                    </div>
+                </div>
+                <p class="mb-0">سكنت في شقة من الموقع وكل حاجة كانت زي ما هو مكتوب بالظبط.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="https://randomuser.me/api/portraits/men/65.jpg" class="rounded-circle me-3" width="48" height="48" alt="عميل">
+                    <div>
+                        <strong>أحمد علي</strong>
+                        <span class="d-block text-muted small">ولي أمر</span>
+                    </div>
+                </div>
+                <p class="mb-0">سهلت عليا أدور لابني على سكن آمن وقريب من الجامعة.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- كيف يعمل الموقع -->
+<div class="bg-white py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">إزاي تستخدم سكنك؟</h2>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-search fa-3x text-warning"></i>
+                </div>
+                <h4>دور على شقة</h4>
+                <p>استخدم البحث أو الفلاتر عشان تلاقي السكن اللي يناسبك.</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-money-check-alt fa-3x text-warning"></i>
+                </div>
+                <h4>احجز وادفع بأمان</h4>
+                <p>احجز السرير اللي يعجبك وادفع بكل سهولة وأمان.</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-key fa-3x text-warning"></i>
+                </div>
+                <h4>استلم مكانك</h4>
+                <p>بعد الدفع هتستلم مكانك وتقدر تتواصل مع صاحب السكن.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الجامعات اللي بنوفرلها سكن -->
+<div class="container py-5">
+    <h2 class="text-center mb-5">الجامعات اللي بنوفرلها سكن</h2>
+    <div class="row justify-content-center align-items-center">
+        <div class="col-md-4 mb-4 text-center">
+            <div class="card border-0 shadow-sm rounded-4 py-4 px-2">
+                <i class="fas fa-university fa-3x text-primary mb-3"></i>
+                <h4 class="mb-2">جامعة أسيوط الجديدة التكنولوجية</h4>
+                <p class="text-muted mb-0">سكن قريب وآمن للطلاب في أسيوط الجديدة</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 text-center">
+            <div class="card border-0 shadow-sm rounded-4 py-4 px-2">
+                <i class="fas fa-university fa-3x text-success mb-3"></i>
+                <h4 class="mb-2">جامعة سفنكس</h4>
+                <p class="text-muted mb-0">سكن مميز لطلاب سفنكس بأسعار مناسبة</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 text-center">
+            <div class="card border-0 shadow-sm rounded-4 py-4 px-2">
+                <i class="fas fa-university fa-3x text-warning mb-3"></i>
+                <h4 class="mb-2">الجامعة الأهلية</h4>
+                <p class="text-muted mb-0">سكن للطلاب في الجامعة الأهلية بأسيوط الجديدة</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% endautoescape %}

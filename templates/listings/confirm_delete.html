@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تأكيد الحذف{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="mb-3">{{ title|default:"تأكيد الحذف" }}</h4>
+      <p class="text-danger mb-4">هل أنت متأكد أنك تريد حذف: <strong>{{ object }}</strong>؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+      <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">نعم، حذف</button>
+        <a class="btn btn-secondary" href="{{ cancel_url|default:request.META.HTTP_REFERER }}">إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

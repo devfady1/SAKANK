@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}تم إرسال رابط التأكيد - سكنك{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-envelope fa-4x text-info"></i>
+                    </div>
+                    
+                    <h4 class="mb-3">تحقق من بريدك الإلكتروني</h4>
+                    
+                    <p class="text-muted mb-4">
+                        لقد أرسلنا رابط تأكيد إلى بريدك الإلكتروني. 
+                        يرجى النقر على الرابط لتفعيل حسابك.
+                    </p>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>لم تجد الرسالة؟</strong> تحقق من مجلد الرسائل غير المرغوب فيها
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'account_email' %}" class="btn btn-primary">
+                            <i class="fas fa-redo me-2"></i>
+                            إرسال رابط جديد
+                        </a>
+                        <a href="{% url 'account_login' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            العودة لتسجيل الدخول
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

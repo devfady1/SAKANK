@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تم الدفع بنجاح{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-status-pending {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+.payment-status-success {
+    background-color: #d1edff;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    {% if booking %}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white text-center">
+                        <h4><i class="fas fa-check-circle me-2"></i>تم الدفع بنجاح</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- معلومات الحجز -->
+                        <div class="row mb-4" 
+                             data-booking-id="{{ booking.id }}" 
+                             data-payment-status="{{ booking.payment_status }}">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">رقم الحجز</h6>
+                                <p class="fw-bold">#{{ booking.id }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">المبلغ المدفوع</h6>
+                                <p class="fw-bold">{{ booking.total_amount }} جنيه مصري</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">تاريخ الوصول</h6>
+                                <p>{{ booking.check_in_date }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">تاريخ المغادرة</h6>
+                                <p>{{ booking.check_out_date }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- حالة الدفع -->
+                        <div id="payment-status-alert" class="alert 
+                             {% if booking.payment_status == 'paid' %}
+                                 alert-success payment-status-success
+                             {% else %}
+                                 alert-warning payment-status-pending
+                             {% endif %}">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    {% if booking.payment_status == 'paid' %}
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        تم تأكيد الدفع والحجز
+                                    {% else %}
+                                        <i class="fas fa-clock me-2"></i>
+                                        <span id="status-text">جاري التحقق من حالة الدفع...</span>
+                                    {% endif %}
+                                </div>
+                                {% if booking.payment_status != 'paid' %}
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if payment %}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted">معرف الدفع</h6>
+                                    <p class="small text-muted">{{ payment.stripe_payment_intent_id }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="text-center">
+                            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-list me-2"></i>عرض جميع حجوزاتي
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle me-2"></i>
+            تم الدفع بنجاح! ستتلقى تفاصيل الحجز على حسابك.
+        </div>
+        <div class="text-center">
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-primary">اذهب إلى حجوزاتي</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payment-status.js' %}"></script>
+{% endblock %}

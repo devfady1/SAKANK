@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}قائمة الشقق - سكنك{% endblock %}
+
+{% autoescape on %}
+{% block content %}
+<div class="container my-5">
+    <!-- نموذج البحث والفلترة -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">البحث</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="اسم الشقة أو الوصف" value="{{ search_query }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">الموقع</label>
+                    <select name="location" class="form-select">
+                        <option value="">جميع المواقع</option>
+                        {% for location in locations %}
+                            <option value="{{ location.id }}" 
+                                    {% if location.id|stringformat:"s" == selected_location %}selected{% endif %}>
+                                {{ location.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-search me-1"></i>بحث
+                        </button>
+                        <a href="{% url 'listings:apartment_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- النتائج -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>الشقق المتاحة</h2>
+        <span class="text-muted">{{ apartments|length }} شقة</span>
+    </div>
+
+    <div class="row">
+        {% for apartment in apartments %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div style="background: linear-gradient(135deg, #fffbe6 0%, #ffe5b4 100%); border-radius: 1.5rem 1.5rem 0 0; position: relative;">
+                        {% if apartment.main_image %}
+                            <img src="{{ apartment.main_image.url }}" class="card-img-top rounded-4 border border-2" 
+                                 alt="صورة الشقة" style="height: 170px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center rounded-4 border border-2" 
+                                 style="height: 170px;">
+                                <i class="fas fa-home fa-3x text-warning"></i>
+                            </div>
+                        {% endif %}
+                        <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 shadow" style="font-size:1rem;">{{ apartment.get_min_price }} جنيه / شهر</span>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold text-primary mb-2" style="font-size:1.2rem;">{{ apartment.name }}</h5>
+                        <p class="text-muted mb-1 small">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ apartment.location.name }}
+                        </p>
+                        <p class="card-text flex-grow-1 mb-2 text-dark small">{{ apartment.description|truncatewords:18 }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-light text-dark border border-1 px-2">{{ apartment.rooms.count }} غرفة</span>
+                            </div>
+                            <a href="{% url 'listings:apartment_detail' apartment.pk %}" 
+                               class="btn btn-warning w-100 rounded-4 fw-bold py-2 mt-1 shadow-sm">
+                                <i class="fas fa-info-circle me-1"></i> التفاصيل
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد شقق تطابق البحث</h4>
+                    <p class="text-muted">جرب تغيير معايير البحث أو تصفح جميع الشقق</p>
+                    <a href="{% url 'listings:apartment_list' %}" class="btn btn-primary">
+                        عرض جميع الشقق
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- الترقيم -->
+    {% if is_paginated %}
+        <nav aria-label="ترقيم الصفحات" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}">
+                            الأولى
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}">
+                            السابقة
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}">
+                            التالية
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}">
+                            الأخيرة
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}
+{% endautoescape %}

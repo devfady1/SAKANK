@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}تأكيد البريد الإلكتروني - سكنك{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">تأكيد البريد الإلكتروني</h4>
+                    <p class="text-muted mt-2">خطوة أخيرة لتفعيل حسابك</p>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope-open fa-3x text-info"></i>
+                    </div>
+
+                    {% if confirmation %}
+                        <p class="text-center mb-4">
+                            يرجى تأكيد أن عنوان البريد الإلكتروني 
+                            <strong>{{ confirmation.email_address.email }}</strong>
+                            ينتمي إليك.
+                        </p>
+
+                        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                            {% csrf_token %}
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>
+                                    تأكيد البريد الإلكتروني
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            رابط التأكيد غير صالح أو منتهي الصلاحية
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{% url 'account_email' %}" class="btn btn-primary">
+                                <i class="fas fa-redo me-2"></i>
+                                إرسال رابط تأكيد جديد
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'account_login' %}" class="text-decoration-none">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            العودة لتسجيل الدخول
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

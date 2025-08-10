@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}تم إلغاء الدفع{% endblock %}
+{% block content %}
+<div class="container my-5">
+  <div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-1"></i>
+    تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.
+  </div>
+  <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary">العودة إلى حجوزاتي</a>
+</div>
+{% endblock %}

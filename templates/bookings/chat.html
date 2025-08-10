@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}المحادثة مع المالك{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .chat-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    .chat-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        overflow: hidden;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        color: white;
+        padding: 20px;
+        border-bottom: none;
+    }
+    
+    .chat-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .chat-header .subtitle {
+        opacity: 0.9;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .online-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .online-dot {
+        width: 10px;
+        height: 10px;
+        background: #4ade80;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    
+    .chat-body {
+        background: #f0f2f5;
+        min-height: 500px;
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 20px;
+        position: relative;
+    }
+    
+    .chat-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .chat-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .chat-body::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .message-wrapper {
+        margin-bottom: 15px;
+        animation: fadeInUp 0.3s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .message-bubble {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .message-sent {
+        background: linear-gradient(135deg, #25d366 0%, #20b358 100%);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .message-received {
+        background: white;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .message-info {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        margin-top: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .message-time {
+        font-size: 0.7rem;
+    }
+    
+    .message-status {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    
+    .chat-footer {
+        background: white;
+        padding: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .message-input-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .message-input {
+        flex: 1;
+        border: 2px solid #e5e7eb;
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    
+    .message-input:focus {
+        border-color: #25d366;
+        box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+    }
+    
+    .send-button {
+        background: linear-gradient(135deg, #25d366 0%, #20b358 100%);
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .send-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 10px 20px;
+        font-style: italic;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .notification-badge {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #25d366;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transform: translateX(400px);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .notification-badge.show {
+        transform: translateX(0);
+    }
+    
+    .empty-chat {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .empty-chat i {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="container">
+        <div class="chat-card">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5><i class="fas fa-bed me-2"></i>السرير رقم {{ booking.bed.bed_number }}</h5>
+                        <div class="subtitle">{{ booking.bed.room.apartment.name }} - {{ booking.bed.room.name }}</div>
+                        <div class="online-status">
+                            <div class="online-dot"></div>
+                            <span style="font-size: 0.8rem;">متصل الآن</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <a href="{% url 'bookings:user_chats' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>العودة للمحادثات
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Body -->
+            <div class="chat-body" id="chat-body">
+                {% for msg in messages %}
+                    {% if msg.text and 'Message object' not in msg.text %}
+                        <div class="message-wrapper">
+                            <div class="d-flex {% if msg.sender == user %}justify-content-end{% else %}justify-content-start{% endif %}">
+                                <div class="message-bubble {% if msg.sender == user %}message-sent{% else %}message-received{% endif %}">
+                                    <div class="message-text">{{ msg.text }}</div>
+                                    <div class="message-info">
+                                        <span class="message-time">{{ msg.sent_at|date:"H:i" }}</span>
+                                        {% if msg.sender == user %}
+                                            <div class="message-status">
+                                                {% if msg.is_read %}
+                                                    <i class="fas fa-check-double text-info"></i>
+                                                {% else %}
+                                                    <i class="fas fa-check"></i>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="empty-chat">
+                        <i class="fas fa-comments"></i>
+                        <h5>ابدأ المحادثة</h5>
+                        <p>لا توجد رسائل بعد. اكتب أول رسالة لبدء المحادثة!</p>
+                    </div>
+                {% endfor %}
+                
+                <div class="typing-indicator" id="typing-indicator">
+                    <i class="fas fa-circle"></i>
+                    <i class="fas fa-circle"></i>
+                    <i class="fas fa-circle"></i>
+                    يكتب...
+                </div>
+            </div>
+            
+            <!-- Chat Footer -->
+            <div class="chat-footer">
+                <form method="post" class="message-input-container" id="message-form">
+                    {% csrf_token %}
+                    <input type="text" 
+                           name="text" 
+                           class="message-input" 
+                           id="message-input"
+                           placeholder="اكتب رسالتك هنا..." 
+                           required
+                           autocomplete="off">
+                    <button class="send-button" type="submit" id="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Badge -->
+<div class="notification-badge" id="notification-badge">
+    <i class="fas fa-bell me-2"></i>
+    <span id="notification-text">رسالة جديدة!</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatBody = document.getElementById('chat-body');
+    const messageInput = document.getElementById('message-input');
+    const messageForm = document.getElementById('message-form');
+    
+    // Scroll to bottom on load
+    function scrollToBottom() {
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    scrollToBottom();
+    // Auto-refresh messages every 5 seconds
+    setInterval(function() {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newChatBody = doc.getElementById('chat-body');
+                
+                if (newChatBody && newChatBody.innerHTML !== chatBody.innerHTML) {
+                    chatBody.innerHTML = newChatBody.innerHTML;
+                    scrollToBottom();
+                }
+            })
+            .catch(error => {
+                console.log('Error refreshing messages:', error);
+            });
+    }, 5000);
+    
+    // Enter key to send message
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            messageForm.submit();
+        }
+    });
+    
+    // Focus on message input
+    messageInput.focus();
+});
+</script>
+{% endblock %}

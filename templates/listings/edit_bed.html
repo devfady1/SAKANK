@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تعديل السرير{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-3">تعديل السرير</h3>
+  <form method="post" class="card p-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="row g-3">
+      <div class="col-12">{{ form.bed_number.label_tag }}{{ form.bed_number }}</div>
+      <div class="col-12">{{ form.monthly_price.label_tag }}{{ form.monthly_price }}</div>
+      <div class="col-12">{{ form.status.label_tag }}{{ form.status }}</div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">حفظ التعديلات</button>
+      <a class="btn btn-secondary" href="{% url 'listings:seller_dashboard' %}">إلغاء</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إضافة شقة جديدة - سكنك{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        إضافة شقة جديدة
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-building me-1"></i>{{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ form.location.label }}
+                                </label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>{{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">
+                                    <i class="fas fa-home me-1"></i>{{ form.address.label }}
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">{{ form.address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.floor_number.id_for_label }}" class="form-label">
+                                    <i class="fas fa-layer-group me-1"></i>{{ form.floor_number.label }}
+                                </label>
+                                {{ form.floor_number }}
+                                {% if form.floor_number.errors %}
+                                    <div class="text-danger small">{{ form.floor_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.total_rooms.id_for_label }}" class="form-label">
+                                    <i class="fas fa-door-open me-1"></i>{{ form.total_rooms.label }}
+                                </label>
+                                {{ form.total_rooms }}
+                                {% if form.total_rooms.errors %}
+                                    <div class="text-danger small">{{ form.total_rooms.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.total_bathrooms.id_for_label }}" class="form-label">
+                                    <i class="fas fa-bath me-1"></i>{{ form.total_bathrooms.label }}
+                                </label>
+                                {{ form.total_bathrooms }}
+                                {% if form.total_bathrooms.errors %}
+                                    <div class="text-danger small">{{ form.total_bathrooms.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.area.id_for_label }}" class="form-label">
+                                    <i class="fas fa-ruler-combined me-1"></i>{{ form.area.label }}
+                                </label>
+                                {{ form.area }}
+                                {% if form.area.errors %}
+                                    <div class="text-danger small">{{ form.area.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.main_image.id_for_label }}" class="form-label">
+                                <i class="fas fa-camera me-1"></i>{{ form.main_image.label }}
+                            </label>
+                            {{ form.main_image }}
+                            {% if form.main_image.errors %}
+                                <div class="text-danger small">{{ form.main_image.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">يفضل أن تكون الصورة بحجم 800x600 بكسل أو أكبر</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.has_wifi }}
+                                    <label class="form-check-label" for="{{ form.has_wifi.id_for_label }}">
+                                        <i class="fas fa-wifi me-1"></i>{{ form.has_wifi.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.has_parking }}
+                                    <label class="form-check-label" for="{{ form.has_parking.id_for_label }}">
+                                        <i class="fas fa-car me-1"></i>{{ form.has_parking.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.has_ac }}
+                                    <label class="form-check-label" for="{{ form.has_ac.id_for_label }}">
+                                        <i class="fas fa-snowflake me-1"></i>{{ form.has_ac.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.has_kitchen }}
+                                    <label class="form-check-label" for="{{ form.has_kitchen.id_for_label }}">
+                                        <i class="fas fa-utensils me-1"></i>{{ form.has_kitchen.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                <i class="fas fa-check-circle me-1"></i>{{ form.is_active.label }}
+                            </label>
+                        </div>
+
+                        <!-- غرف الشقة -->
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="fas fa-door-open me-2"></i>الغرف</h5>
+                        {{ room_formset.management_form }}
+                        <div id="rooms-container" class="d-flex flex-column gap-3">
+                            {% for rform in room_formset.forms %}
+                            <div class="card border">
+                                <div class="card-body">
+                                    {{ rform.id }}
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label">اسم/رقم الغرفة</label>
+                                            {{ rform.name }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">عدد الأسرة</label>
+                                            {{ rform.bed_count }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">سعر السرير الشهري</label>
+                                            {{ rform.bed_price }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">صورة الغرفة</label>
+                                            {{ rform.room_image }}
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">وصف الغرفة</label>
+                                            {{ rform.description }}
+                                        </div>
+                                        {% if rform.DELETE %}
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                {{ rform.DELETE }}
+                                                <label class="form-check-label">حذف هذه الغرفة</label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-muted">لا توجد غرف. اضغط "إضافة غرفة" أدناه.</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- قالب غرفة فارغة -->
+                        <template id="room-empty-form-template">
+                            <div class="card border">
+                                <div class="card-body">
+                                    {{ room_formset.empty_form.id }}
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label">اسم/رقم الغرفة</label>
+                                            {{ room_formset.empty_form.name.as_widget }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">عدد الأسرة</label>
+                                            {{ room_formset.empty_form.bed_count.as_widget }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">سعر السرير الشهري</label>
+                                            {{ room_formset.empty_form.bed_price.as_widget }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">صورة الغرفة</label>
+                                            {{ room_formset.empty_form.room_image.as_widget }}
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">وصف الغرفة</label>
+                                            {{ room_formset.empty_form.description.as_widget }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
+                            <button type="button" id="add-room-btn" class="btn btn-outline-success">
+                                <i class="fas fa-plus me-2"></i>إضافة غرفة
+                            </button>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'listings:seller_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right me-2"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>حفظ الشقة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // معاينة الصورة قبل الرفع
+    document.getElementById('{{ form.main_image.id_for_label }}').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // إنشاء معاينة للصورة
+                let preview = document.getElementById('image-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.id = 'image-preview';
+                    preview.className = 'mt-2';
+                    e.target.parentNode.appendChild(preview);
+                }
+                preview.innerHTML = `
+                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                    <p class="small text-muted mt-1">معاينة الصورة المختارة</p>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+
+<script>
+    // إدارة إضافة نماذج الغرف (Inline Formset)
+    (function() {
+        const container = document.getElementById('rooms-container');
+        const addBtn = document.getElementById('add-room-btn');
+        if (!container || !addBtn) return;
+
+        const totalFormsInput = document.querySelector('input[name="room_set-TOTAL_FORMS"]');
+        const emptyTemplate = document.getElementById('room-empty-form-template');
+
+        function addRoomForm() {
+            const total = parseInt(totalFormsInput.value, 10);
+            let html = emptyTemplate.innerHTML;
+            // استبدال __prefix__ برقم النموذج الجديد
+            html = html.replaceAll('__prefix__', total);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html.trim();
+            container.appendChild(wrapper.firstElementChild);
+            totalFormsInput.value = total + 1;
+        }
+
+        addBtn.addEventListener('click', addRoomForm);
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ملفي الشخصي - سكنك{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="fas fa-user me-2"></i>ملفي الشخصي</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>اسم المستخدم:</strong>
+              <div>{{ user_obj.username }}</div>
+            </div>
+            <div class="col-md-6">
+              <strong>البريد الإلكتروني:</strong>
+              <div>{{ user_obj.email|default:'—' }}</div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>رقم الجوال:</strong>
+              <div>{{ user_obj.phone|default:'—' }}</div>
+            </div>
+            <div class="col-md-6">
+              <strong>نوع الحساب:</strong>
+              <div>
+                {% if user_obj.user_type == 'seller' %}
+                  بائع
+                {% else %}
+                  مشتري
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>حالة التحقق:</strong>
+              <div>
+                {% if user_obj.is_verified %}<span class="badge bg-success">موثق</span>{% else %}<span class="badge bg-secondary">غير موثق</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <strong>تاريخ الانضمام:</strong>
+              <div>{{ user_obj.date_joined|date:'Y-m-d H:i' }}</div>
+            </div>
+          </div>
+          <hr>
+          <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="{% url 'accounts:seller_verification' %}">
+              <i class="fas fa-check-circle me-1"></i>التحقق للبائعين
+            </a>
+            {% if user_obj.user_type == 'seller' %}
+            <a class="btn btn-outline-success" href="{% url 'listings:seller_dashboard' %}">
+              <i class="fas fa-tachometer-alt me-1"></i>لوحة تحكم البائع
+            </a>
+            {% else %}
+            <a class="btn btn-outline-success" href="{% url 'bookings:my_bookings' %}">
+              <i class="fas fa-calendar me-1"></i>حجوزاتي
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

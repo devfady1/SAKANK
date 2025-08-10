@@ -1,0 +1,67 @@
+/* Sakanak Bold RTL Theme */
+:root{
+  --primary:#1f57ff;
+  --primary-dark:#0e2fb8;
+  --accent:#00d2d3;
+  --success:#22c55e;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --text:#101828;
+  --muted:#667085;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --shadow:0 10px 30px rgba(2,12,27,.08);
+}
+
+html, body{background:var(--bg); color:var(--text)}
+
+.navbar{position:sticky; top:0; z-index:1030; backdrop-filter:saturate(180%) blur(8px); background:rgba(255,255,255,.9)!important; box-shadow:0 1px 20px rgba(16,24,40,.06)}
+.navbar-brand{letter-spacing:.5px}
+
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border:0; box-shadow:0 8px 20px rgba(31,87,255,.25)}
+.btn-primary:hover{transform:translateY(-1px); filter:brightness(1.05)}
+.btn-outline-primary{border-color:var(--primary); color:var(--primary)}
+.btn-outline-primary:hover{background:var(--primary); color:#fff}
+
+.hero-section{position:relative; overflow:hidden; background:radial-gradient(1200px 500px at 80% -20%, rgba(31,87,255,.25), transparent), linear-gradient(135deg,#0ea5e9 0%, #1f57ff 100%)}
+.hero-section::after{content:""; position:absolute; inset:0; background:radial-gradient(700px 300px at -10% 110%, rgba(0,210,211,.25), transparent)}
+.hero-section .display-4{line-height:1.15}
+.hero-section .btn{border-radius:12px}
+
+.card{border:0; border-radius:16px; box-shadow:var(--shadow)}
+.card:hover{transform:translateY(-2px); transition:transform .2s ease}
+.card-title{font-weight:800}
+
+.price-badge{background:linear-gradient(135deg,#10b981,#16a34a); border-radius:999px; box-shadow:0 6px 16px rgba(16,185,129,.25)}
+
+/* Tables */
+.table{--bs-table-bg:transparent}
+.table thead th{color:#475467; font-weight:700; border-bottom:2px solid #eef2f7}
+.table tbody td{vertical-align:middle}
+
+/* Badges */
+.badge{border-radius:999px; padding:.5em .7em}
+
+/* Footer */
+.footer{background:linear-gradient(180deg,#0f172a 0%, #0b1020 100%)}
+.footer a{transition:opacity .2s}
+.footer a:hover{opacity:.85}
+
+/* Images */
+.img-fluid.rounded.shadow{box-shadow:var(--shadow)}
+
+/* Animations */
+.fade-up{opacity:0; transform:translateY(12px); animation:fadeUp .6s ease forwards}
+@keyframes fadeUp{to{opacity:1; transform:none}}
+
+/* Inputs */
+.form-control, .form-select{border-radius:12px; border:1px solid #e4e7ec}
+.form-control:focus, .form-select:focus{border-color:var(--primary); box-shadow:0 0 0 .2rem rgba(31,87,255,.15)}
+
+/* Sticky sidebar card spacing */
+.sticky-top{z-index:100}
+
+/* RTL tweaks */
+[dir="rtl"] .me-1{margin-left:.25rem!important; margin-right:0!important}
+[dir="rtl"] .me-2{margin-left:.5rem!important; margin-right:0!important}
+[dir="rtl"] .ms-2{margin-right:.5rem!important; margin-left:0!important}

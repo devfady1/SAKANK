@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}تواصل معنا - سكنك{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="fw-bold text-primary mb-4">تواصل معنا</h2>
+                    <p class="text-muted mb-4">نحن هنا لمساعدتك. أرسل لنا رسالة وسنتواصل معك في أقرب وقت ممكن.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    {{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    {{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                    {{ form.phone.label }}
+                                </label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small">{{ form.phone.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.subject.id_for_label }}" class="form-label">
+                                    {{ form.subject.label }}
+                                </label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                    <div class="text-danger small">{{ form.subject.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.message.id_for_label }}" class="form-label">
+                                {{ form.message.label }}
+                            </label>
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small">{{ form.message.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>إرسال الرسالة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4">معلومات التواصل</h4>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone text-primary me-3"></i>
+                            <div>
+                                <strong>الهاتف</strong><br>
+                                <span class="text-muted">+966 50 123 4567</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope text-primary me-3"></i>
+                            <div>
+                                <strong>البريد الإلكتروني</strong><br>
+                                <span class="text-muted">info@sakanak.com</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                            <div>
+                                <strong>العنوان</strong><br>
+                                <span class="text-muted">الرياض، المملكة العربية السعودية</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock text-primary me-3"></i>
+                            <div>
+                                <strong>ساعات العمل</strong><br>
+                                <span class="text-muted">الأحد - الخميس: 9:00 ص - 6:00 م</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="fw-bold mb-3">تابعنا على</h5>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

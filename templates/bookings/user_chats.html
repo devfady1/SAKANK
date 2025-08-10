@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}محادثاتي{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chats-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+    
+    .chats-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        overflow: hidden;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .chats-header {
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .chats-header h3 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .chat-item {
+        background: white;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 20px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .chat-item:hover {
+        background: #f8f9fa;
+        transform: translateX(-5px);
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .chat-item:last-child {
+        border-bottom: none;
+    }
+    
+    .chat-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .chat-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .chat-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .chat-subtitle {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    
+    .chat-user {
+        color: #25d366;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .chat-badges {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    
+    .unread-badge {
+        background: #25d366;
+        color: white;
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        animation: pulse-badge 2s infinite;
+    }
+    
+    @keyframes pulse-badge {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .chat-time {
+        color: #999;
+        font-size: 0.75rem;
+    }
+    
+    .empty-chats {
+        text-align: center;
+        padding: 80px 40px;
+        color: #666;
+    }
+    
+    .empty-chats i {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .empty-chats h5 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .stats-row {
+        background: #f8f9fa;
+        padding: 20px;
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    
+    .stat-item {
+        flex: 1;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #25d366;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chats-container">
+    <div class="container">
+        <div class="chats-card">
+            <div class="chats-header">
+                <h3><i class="fas fa-comments me-3"></i>محادثاتي</h3>
+                <p class="mb-0 mt-2" style="opacity: 0.9;">جميع محادثاتك مع المالكين والمستأجرين</p>
+            </div>
+            
+            {% if chats %}
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ chats|length }}</span>
+                        <span class="stat-label">محادثة نشطة</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">
+                            {% for chat in chats %}
+                                {% if chat.unread_count > 0 %}{{ chat.unread_count|add:0 }}{% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="stat-label">رسالة غير مقروءة</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ chats|length }}</span>
+                        <span class="stat-label">حجز نشط</span>
+                    </div>
+                </div>
+                
+                <div class="chats-list">
+                    {% for chat in chats %}
+                        <a href="{% url 'bookings:chat' chat.booking.id %}" class="chat-item">
+                            <div class="chat-avatar">
+                                {{ chat.booking.bed.bed_number }}
+                            </div>
+                            <div class="chat-info">
+                                <div class="chat-title">
+                                    السرير رقم {{ chat.booking.bed.bed_number }}
+                                </div>
+                                <div class="chat-subtitle">
+                                    {{ chat.booking.bed.room.apartment.name }} - {{ chat.booking.bed.room.name }}
+                                </div>
+                                <div class="chat-user">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ chat.other_user.get_full_name|default:chat.other_user.username }}
+                                </div>
+                            </div>
+                            <div class="chat-badges">
+                                {% if chat.unread_count > 0 %}
+                                    <span class="unread-badge">
+                                        {{ chat.unread_count }} جديد
+                                    </span>
+                                {% endif %}
+                                <span class="chat-time">
+                                    <i class="fas fa-clock me-1"></i>
+                                    منذ دقائق
+                                </span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-chats">
+                    <i class="fas fa-comments"></i>
+                    <h5>لا توجد محادثات بعد</h5>
+                    <p>عندما تقوم بحجز سرير، ستظهر محادثتك مع المالك هنا</p>
+                    <a href="{% url 'listings:apartment_list' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-search me-2"></i>تصفح الشقق المتاحة
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/notification-config.js' %}"></script>
+<script src="{% static 'js/webview-bridge.js' %}"></script>
+<script src="{% static 'js/notifications.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تهيئة نظام الإشعارات
+    window.sakanakNotifications = new SakanakNotifications();
+    
+    // حساب عدد الرسائل غير المقروءة الحالي
+    function getCurrentUnreadCount() {
+        const badges = document.querySelectorAll('.unread-badge');
+        let total = 0;
+        badges.forEach(badge => {
+            const count = parseInt(badge.textContent.replace(/[^\d]/g, '')) || 0;
+            total += count;
+        });
+        return total;
+    }
+    
+    currentUnreadCount = getCurrentUnreadCount();
+    sakanakNotifications.updateNotificationBadge(currentUnreadCount);
+    
+    // Auto-refresh chat list every 10 seconds
+    setInterval(function() {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newChatsList = doc.querySelector('.chats-list');
+                const currentChatsList = document.querySelector('.chats-list');
+                
+                if (newChatsList && currentChatsList) {
+                    // حساب عدد الرسائل الجديدة
+                    const newUnreadCount = doc.querySelectorAll('.unread-badge').length;
+                    const newTotalUnread = Array.from(doc.querySelectorAll('.unread-badge'))
+                        .reduce((total, badge) => {
+                            return total + (parseInt(badge.textContent.replace(/[^\d]/g, '')) || 0);
+                        }, 0);
+                    
+                    // إذا زاد عدد الرسائل غير المقروءة
+                    if (newTotalUnread > currentUnreadCount) {
+                        const newMessagesCount = newTotalUnread - currentUnreadCount;
+                        
+                        // إظهار إشعار للرسائل الجديدة
+                        sakanakNotifications.showMessageNotification({
+                            title: 'رسائل جديدة',
+                            body: `لديك ${newMessagesCount} رسالة جديدة في محادثاتك`,
+                            sender: 'سكنك',
+                            avatar: '/static/images/logo.png'
+                        });
+                        
+                        currentUnreadCount = newTotalUnread;
+                    }
+                    
+                    // تحديث القائمة
+                    currentChatsList.innerHTML = newChatsList.innerHTML;
+                    
+                    // تحديث عداد الإشعارات
+                    sakanakNotifications.updateNotificationBadge(newTotalUnread);
+                }
+            })
+            .catch(error => {
+                console.log('Error refreshing chats:', error);
+                sakanakNotifications.showStatusNotification('خطأ في تحديث المحادثات', 'error');
+            });
+    }, 10000);
+    
+    // إضافة تأثيرات تفاعلية للمحادثات
+    document.addEventListener('click', function(e) {
+        const chatItem = e.target.closest('.chat-item');
+        if (chatItem) {
+            // تأثير النقر
+            chatItem.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                chatItem.style.transform = '';
+            }, 150);
+        }
+    });
+    
+    // التحقق من الاتصال
+    function checkConnection() {
+        if (navigator.onLine) {
+            sakanakNotifications.showStatusNotification('تم استعادة الاتصال', 'success');
+        } else {
+            sakanakNotifications.showStatusNotification('انقطع الاتصال بالإنترنت', 'error');
+        }
+    }
+    
+    window.addEventListener('online', checkConnection);
+    window.addEventListener('offline', checkConnection);
+    
+    // إظهار رسالة ترحيب إذا لم توجد محادثات
+    if (document.querySelector('.empty-chats')) {
+        setTimeout(() => {
+            sakanakNotifications.showStatusNotification('مرحباً بك في سكنك! ابدأ بحجز شقة لبدء المحادثة', 'info');
+        }, 2000);
+    }
+});
+</script>
+{% endblock %}

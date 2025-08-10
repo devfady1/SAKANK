@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}التحقق من البائع - سكنك{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">التحقق من البائع</h2>
+                        <p class="text-muted">يرجى رفع المستندات المطلوبة للتحقق من هويتك كبائع</p>
+                    </div>
+
+                    {% if verification %}
+                        <!-- عرض حالة التحقق الحالية -->
+                        <div class="alert 
+                            {% if verification.status == 'pending' %}alert-warning
+                            {% elif verification.status == 'approved' %}alert-success
+                            {% else %}alert-danger{% endif %} mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas 
+                                    {% if verification.status == 'pending' %}fa-clock
+                                    {% elif verification.status == 'approved' %}fa-check-circle
+                                    {% else %}fa-times-circle{% endif %} me-3 fa-2x"></i>
+                                <div>
+                                    <h5 class="mb-1">
+                                        {% if verification.status == 'pending' %}
+                                            طلبك قيد المراجعة
+                                        {% elif verification.status == 'approved' %}
+                                            تم الموافقة على طلبك
+                                        {% else %}
+                                            تم رفض طلبك
+                                        {% endif %}
+                                    </h5>
+                                    <p class="mb-0">
+                                        {% if verification.status == 'pending' %}
+                                            سيتم مراجعة طلبك خلال 24-48 ساعة وسنتواصل معك قريباً.
+                                        {% elif verification.status == 'approved' %}
+                                            مبروك! تم التحقق من حسابك كبائع. يمكنك الآن إضافة شقق للإيجار.
+                                        {% else %}
+                                            {{ verification.rejection_reason|default:"يرجى التواصل معنا لمعرفة السبب." }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if verification.status == 'approved' %}
+                            <div class="text-center">
+                                <a href="{% url 'listings:seller_dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>انتقل إلى لوحة التحكم
+                                </a>
+                            </div>
+                        {% elif verification.status == 'rejected' %}
+                            <!-- إعادة تقديم الطلب -->
+                            <h4 class="mb-3">إعادة تقديم الطلب</h4>
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.id_card_image.id_for_label }}" class="form-label">
+                                        {{ form.id_card_image.label }}
+                                    </label>
+                                    {{ form.id_card_image }}
+                                    {% if form.id_card_image.errors %}
+                                        <div class="text-danger small">{{ form.id_card_image.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">يرجى رفع صورة واضحة للبطاقة الشخصية</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.ownership_document.id_for_label }}" class="form-label">
+                                        {{ form.ownership_document.label }}
+                                    </label>
+                                    {{ form.ownership_document }}
+                                    {% if form.ownership_document.errors %}
+                                        <div class="text-danger small">{{ form.ownership_document.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">يرجى رفع صورة واضحة لوثيقة الملكية أو عقد الإيجار</div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-upload me-2"></i>إعادة تقديم الطلب
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <!-- تقديم طلب جديد -->
+                        <div class="alert alert-info mb-4">
+                            <h5><i class="fas fa-info-circle me-2"></i>المستندات المطلوبة</h5>
+                            <ul class="mb-0">
+                                <li>صورة واضحة للبطاقة الشخصية أو الإقامة</li>
+                                <li>وثيقة الملكية أو عقد الإيجار للعقار</li>
+                            </ul>
+                        </div>
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.id_card_image.id_for_label }}" class="form-label">
+                                    {{ form.id_card_image.label }}
+                                </label>
+                                {{ form.id_card_image }}
+                                {% if form.id_card_image.errors %}
+                                    <div class="text-danger small">{{ form.id_card_image.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">يرجى رفع صورة واضحة للبطاقة الشخصية</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.ownership_document.id_for_label }}" class="form-label">
+                                    {{ form.ownership_document.label }}
+                                </label>
+                                {{ form.ownership_document }}
+                                {% if form.ownership_document.errors %}
+                                    <div class="text-danger small">{{ form.ownership_document.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">يرجى رفع صورة واضحة لوثيقة الملكية أو عقد الإيجار</div>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <small>
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    تأكد من وضوح الصور وقابليتها للقراءة. المستندات غير الواضحة ستؤدي إلى رفض الطلب.
+                                </small>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-upload me-2"></i>تقديم طلب التحقق
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-2">هل تحتاج مساعدة؟</p>
+                        <a href="{% url 'pages:contact' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-1"></i>تواصل معنا
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}تسجيل الخروج - سكنك{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-sign-out-alt fa-4x text-warning"></i>
+                    </div>
+                    
+                    <h4 class="mb-3">هل تريد تسجيل الخروج؟</h4>
+                    
+                    <p class="text-muted mb-4">
+                        سيتم تسجيل خروجك من حسابك في سكنك
+                    </p>
+                    
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                نعم، تسجيل الخروج
+                            </button>
+                            <a href="{% url 'pages:home' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
