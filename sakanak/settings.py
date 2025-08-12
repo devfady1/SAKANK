@@ -17,7 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-n4knn*0rg%m^4=j*f8f@n8s0i5a22#%l55o@=n9)4jh@6i3*68')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ['true', '1', 'yes']
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,sakany.pythonanywhere.com').split(',')
+
+# CSRF trusted origins (important on production)
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://sakany.pythonanywhere.com'
+).split(',')
 
 # Stripe API Keys
 
@@ -151,9 +157,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'accounts.User'
 
 # إعدادات Stripe
-STRIPE_PUBLIC_KEY = 'pk_test_51RauUlGfwzChTOC83HiX3g5umkw5xUvSIsRPC9mx1J4pmNDmLRY7FfPC1Uim33AH1UAmHec9c4qb2PP3QcGReVPK00DOxuCePe'
-STRIPE_SECRET_KEY = 'sk_test_51RauUlGfwzChTOC8PXXS8sRr3jVsdP7Zq03T9fLCM3Y3gS2G286RudvtAvCjdU2OjMw59W4AQJeRD9mn7T3gnunr00m5d9MHP8'
-STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')  # أضف قيمة في ملف .env
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')  # ضع القيمة في ملف .env
 
 # إعدادات تسجيل الدخول
 LOGIN_URL = '/accounts/login/'
@@ -182,6 +188,15 @@ ACCOUNT_USERNAME_MIN_LENGTH = 3
 ACCOUNT_PASSWORD_MIN_LENGTH = 8
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Production security (enabled when DEBUG=False)
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Uncomment if you terminate SSL at Django (usually not needed on PythonAnywhere)
+    # SECURE_SSL_REDIRECT = True
 
 ############################################################
 # Jazzmin (Admin) - Force Dark Theme
