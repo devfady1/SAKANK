@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}حالة الدفع اليدوي{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+  <div class="card shadow-sm">
+    <div class="card-header py-2 {% if manual_payment.status == 'approved' %}bg-success{% elif manual_payment.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %} text-white">
+      <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>حالة الدفع اليدوي</h6>
+    </div>
+    <div class="card-body py-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-bold">الحجز #{{ booking.id }}</div>
+        <div>
+          {% if manual_payment.status == 'approved' %}
+            <span class="badge bg-success">تم الاعتماد</span>
+          {% elif manual_payment.status == 'rejected' %}
+            <span class="badge bg-danger">مرفوض</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">قيد المراجعة</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if manual_payment.status == 'approved' %}
+        <div class="alert alert-success small mb-2">تم اعتماد الدفعة. سيتم تحويلك إلى حجوزاتك خلال ثوانٍ...</div>
+      {% elif manual_payment.status == 'rejected' %}
+        <div class="alert alert-danger small mb-2">عذراً، تم رفض الدفعة. يمكنك إعادة الإرسال أو التواصل معنا.</div>
+      {% else %}
+        <div class="alert alert-info small mb-2">نقوم بمراجعة إثبات الدفع. ستتحدث هذه الصفحة تلقائياً.</div>
+      {% endif %}
+
+      <ul class="list-unstyled small mb-0">
+        <li class="mb-1"><strong>المبلغ:</strong> {{ manual_payment.amount }} جنيه</li>
+        <li class="mb-1"><strong>رقم المُرسل:</strong> {{ manual_payment.sender_phone }}</li>
+        {% if manual_payment.transaction_reference %}
+          <li class="mb-1"><strong>رقم العملية:</strong> {{ manual_payment.transaction_reference }}</li>
+        {% endif %}
+        <li class="mb-1"><strong>تاريخ الإرسال:</strong> {{ manual_payment.created_at }}</li>
+      </ul>
+
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-start mt-3">
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary">الذهاب إلى حجوزاتي</a>
+        <a href="{% url 'pages:contact' %}" class="btn btn-outline-secondary">تواصل معنا</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const status = "{{ manual_payment.status }}";
+    if (status === 'pending') {
+      setTimeout(function(){ window.location.reload(); }, 5000);
+    }
+    if (status === 'approved') {
+      setTimeout(function(){ window.location.href = '{% url "bookings:my_bookings" %}'; }, 2500);
+    }
+  });
+</script>
+{% endblock %}

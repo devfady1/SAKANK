@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}الدفع عبر فودافون كاش{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+  <div class="card shadow-sm">
+    <div class="card-header bg-danger text-white py-2">
+      <h6 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>الدفع عبر فودافون كاش</h6>
+    </div>
+    <div class="card-body py-3">
+      <div class="alert alert-warning small">
+        أرسل المبلغ إلى الرقم: <strong class="ms-1">{{ receiver_number }}</strong> ثم ارفع صورة إثبات الدفع.
+      </div>
+
+      <form method="post" enctype="multipart/form-data" class="small">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">رقم المُرسل (فودافون):</label>
+          {{ form.sender_phone }}
+          {% if form.sender_phone.errors %}
+            <div class="text-danger small">{{ form.sender_phone.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div class="mb-2">
+          <label class="form-label">المبلغ (جنيه):</label>
+          {{ form.amount }}
+          {% if form.amount.errors %}
+            <div class="text-danger small">{{ form.amount.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div class="mb-2">
+          <label class="form-label">رقم العملية (اختياري):</label>
+          {{ form.transaction_reference }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">صورة إثبات الدفع:</label>
+          {{ form.screenshot }}
+          {% if form.screenshot.errors %}
+            <div class="text-danger small">{{ form.screenshot.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-danger w-100">إرسال الإثبات للمراجعة</button>
+      </form>
+
+      {% if instance %}
+      <div class="mt-3 small">
+        <div class="text-muted">لديك إثبات سابق لهذه العملية.</div>
+        <a href="{% url 'payments:manual_payment_status' booking.id %}" class="btn btn-outline-primary w-100 mt-2">عرض حالة الدفع</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
