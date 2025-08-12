@@ -3,48 +3,61 @@
 {% block title %}الدفع للحجز رقم {{ booking.id }}{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-  <div class="row">
-    <div class="col-lg-7">
-      <div class="card shadow-sm mb-3">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>الدفع الآمن</h5>
+<div class="container my-3">
+  <div class="row g-2">
+    <div class="col-12">
+      <div class="card shadow-sm mb-2">
+        <div class="card-header bg-primary text-white py-2">
+          <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>الدفع الآمن</h6>
         </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label fw-bold">اختر طريقة الدفع:</label>
-            <select id="payment-method" class="form-select">
+        <div class="card-body py-3">
+          <div class="mb-2">
+            <label class="form-label fw-bold small">اختر طريقة الدفع:</label>
+            <select id="payment-method" class="form-select form-select-sm">
               <option value="visa">فيزا / ماستر كارد</option>
               <option value="vodafone">فودافون كاش</option>
             </select>
+            <div class="mt-2">
+              <a href="{{ manual_payment_url }}" class="btn btn-outline-danger w-100">
+                الدفع عبر فودافون كاش الآن
+              </a>
+            </div>
           </div>
+
           <div id="visa-section">
-      <div id="payment-message" class="alert d-none" role="alert"></div>
-      <button id="checkout-btn" class="btn btn-primary mt-3 w-100">
-        <span id="button-text">ادفع الآن عبر Stripe</span>
-      </button>
-      <small class="text-muted d-block mt-2">سيتم تحويلك إلى صفحة الدفع الآمنة على Stripe.</small>
+            <div id="payment-message" class="alert d-none mb-2" role="alert"></div>
+            <button id="checkout-btn" class="btn btn-primary w-100">
+              <span id="button-text">ادفع الآن عبر Stripe</span>
+            </button>
+            <small class="text-muted d-block mt-2">سيتم تحويلك إلى صفحة الدفع الآمنة على Stripe.</small>
           </div>
+
           <div id="vodafone-section" style="display:none;">
-            <div class="alert alert-info mt-3">الدفع عبر فودافون كاش غير متاح حالياً. سيتم تفعيله قريباً.</div>
+            <div class="alert alert-info mt-2 mb-2">
+              اختر الدفع اليدوي عبر فودافون كاش. سيتم عرض رقم التحويل ورفع صورة إثبات الدفع.
+            </div>
+            <a href="{{ manual_payment_url }}" class="btn btn-danger w-100">
+              <i class="fas fa-mobile-alt me-1"></i> متابعة الدفع عبر فودافون كاش
+            </a>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-5">
+
+    <div class="col-12">
       <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">تفاصيل الحجز</h5>
-          <ul class="list-unstyled mb-0">
-            <li class="mb-2"><strong>رقم الحجز:</strong> {{ booking.id }}</li>
-            <li class="mb-2"><strong>الشقة:</strong> {{ booking.bed.room.apartment.name }}</li>
-            <li class="mb-2"><strong>الغرفة:</strong> {{ booking.bed.room.name }}</li>
-              <li class="mb-2"><strong>السرير:</strong> {{ booking.bed.bed_number }}
+        <div class="card-body py-3">
+          <h6 class="card-title mb-2">تفاصيل الحجز</h6>
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-1"><strong>رقم الحجز:</strong> {{ booking.id }}</li>
+            <li class="mb-1"><strong>الشقة:</strong> {{ booking.bed.room.apartment.name }}</li>
+            <li class="mb-1"><strong>الغرفة:</strong> {{ booking.bed.room.name }}</li>
+            <li class="mb-1"><strong>السرير:</strong> {{ booking.bed.bed_number }}
               {% if booking.payment_status == 'paid' %}
                 <a href="{% url 'bookings:chat' booking.id %}" class="btn btn-sm btn-success ms-2">شات مع البايع</a>
               {% endif %}
-              </li>
-            <li class="mb-2"><strong>المبلغ الإجمالي:</strong> {{ booking.total_amount }} ريال</li>
+            </li>
+            <li class="mb-1"><strong>المبلغ الإجمالي:</strong> {{ booking.total_amount }} ريال</li>
           </ul>
         </div>
       </div>
@@ -55,46 +68,62 @@
 
 {% block extra_js %}
 <script>
-  const stripe = Stripe("{{ stripe_public_key }}");
-  const paymentMethod = document.getElementById('payment-method');
-  const visaSection = document.getElementById('visa-section');
-  const vodafoneSection = document.getElementById('vodafone-section');
-  const checkoutBtn = document.getElementById('checkout-btn');
-  const messageEl = document.getElementById('payment-message');
+  document.addEventListener('DOMContentLoaded', function(){
+    const paymentMethod = document.getElementById('payment-method');
+    const visaSection = document.getElementById('visa-section');
+    const vodafoneSection = document.getElementById('vodafone-section');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const messageEl = document.getElementById('payment-message');
 
-  paymentMethod.addEventListener('change', function() {
-    if (this.value === 'visa') {
-      visaSection.style.display = '';
-      vodafoneSection.style.display = 'none';
-    } else {
-      visaSection.style.display = 'none';
-      vodafoneSection.style.display = '';
-    }
-  });
-
-  checkoutBtn.addEventListener('click', async function() {
-    checkoutBtn.disabled = true;
-    checkoutBtn.textContent = 'جاري التحويل...';
-    try {
-      const resp = await fetch('/payments/create-checkout-session/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-        body: JSON.stringify({ booking_id: "{{ booking.id }}" })
-      });
-      if (!resp.ok) throw new Error('فشل إنشاء جلسة الدفع');
-      const data = await resp.json();
-      if (data.session_url) {
-        window.location.href = data.session_url;
+    function applyMethodUI() {
+      if (paymentMethod.value === 'visa') {
+        visaSection.style.display = '';
+        vodafoneSection.style.display = 'none';
+        checkoutBtn.disabled = false;
+        checkoutBtn.classList.remove('disabled');
       } else {
-        throw new Error('تعذر الحصول على رابط الدفع');
+        visaSection.style.display = 'none';
+        vodafoneSection.style.display = '';
+        checkoutBtn.disabled = true;
+        checkoutBtn.classList.add('disabled');
       }
-    } catch (err) {
-      messageEl.className = 'alert alert-danger';
-      messageEl.textContent = err.message || 'تعذر إنشاء جلسة الدفع';
-      messageEl.classList.remove('d-none');
-      checkoutBtn.disabled = false;
-      checkoutBtn.textContent = 'ادفع الآن عبر Stripe';
     }
+
+    paymentMethod.addEventListener('change', function() {
+      applyMethodUI();
+      if (paymentMethod.value === 'vodafone') {
+        window.location.href = "{{ manual_payment_url }}";
+      }
+    });
+
+    // تطبيق الحالة عند التحميل لأول مرة
+    applyMethodUI();
+
+    checkoutBtn.addEventListener('click', async function() {
+      if (paymentMethod.value !== 'visa') return;
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = 'جاري التحويل...';
+      try {
+        const resp = await fetch('/payments/create-checkout-session/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: JSON.stringify({ booking_id: "{{ booking.id }}" })
+        });
+        if (!resp.ok) throw new Error('فشل إنشاء جلسة الدفع');
+        const data = await resp.json();
+        if (data.session_url) {
+          window.location.href = data.session_url;
+        } else {
+          throw new Error('تعذر الحصول على رابط الدفع');
+        }
+      } catch (err) {
+        messageEl.className = 'alert alert-danger';
+        messageEl.textContent = err.message || 'تعذر إنشاء جلسة الدفع';
+        messageEl.classList.remove('d-none');
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'ادفع الآن عبر Stripe';
+      }
+    });
   });
 </script>
 {% endblock %}

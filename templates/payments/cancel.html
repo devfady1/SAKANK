@@ -1,11 +1,26 @@
 {% extends 'base.html' %}
+
 {% block title %}تم إلغاء الدفع{% endblock %}
+
 {% block content %}
-<div class="container my-5">
-  <div class="alert alert-warning">
-    <i class="fas fa-exclamation-triangle me-1"></i>
-    تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى.
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm text-center">
+        <div class="card-body p-4">
+          <div class="display-6 text-danger mb-2"><i class="fa fa-times-circle"></i></div>
+          <h5 class="fw-bold mb-2">تم إلغاء الدفع</h5>
+          <p class="text-muted mb-4">يمكنك إعادة المحاولة أو اختيار وسيلة دفع أخرى.</p>
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            {% if booking %}
+              <a href="{% url 'payments:payment' booking.id %}" class="btn btn-primary">إعادة الدفع</a>
+            {% endif %}
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-secondary">العودة إلى حجوزاتي</a>
+            <a href="/" class="btn btn-outline-dark">الرئيسية</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary">العودة إلى حجوزاتي</a>
 </div>
 {% endblock %}

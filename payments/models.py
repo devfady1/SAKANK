@@ -129,3 +129,101 @@ class WebhookEvent(models.Model):
     
     def __str__(self):
         return f"{self.event_type} - {self.stripe_event_id}"
+
+
+class ManualPayment(models.Model):
+    """دفعة يدوية (فودافون كاش)."""
+
+    STATUS_CHOICES = [
+        ('pending', 'في الانتظار'),
+        ('approved', 'مقبول'),
+        ('rejected', 'مرفوض'),
+    ]
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='manual_payment',
+        verbose_name='الحجز'
+    )
+
+    method = models.CharField(
+        max_length=30,
+        default='vodafone_cash',
+        verbose_name='طريقة الدفع'
+    )
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='المبلغ المدفوع'
+    )
+
+    sender_phone = models.CharField(
+        max_length=20,
+        verbose_name='رقم المرسل'
+    )
+
+    transaction_ref = models.CharField(
+        max_length=60,
+        blank=True,
+        verbose_name='رقم العملية/المرجع (اختياري)'
+    )
+
+    screenshot = models.ImageField(
+        upload_to='manual_payments/',
+        verbose_name='صورة إثبات الدفع'
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='الحالة'
+    )
+
+    admin_notes = models.TextField(
+        blank=True,
+        verbose_name='ملاحظات المشرف'
+    )
+
+    processed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processed_manual_payments',
+        verbose_name='تمت المراجعة بواسطة'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإنشاء')
+    processed_at = models.DateTimeField(null=True, blank=True, verbose_name='تاريخ المراجعة')
+
+    class Meta:
+        verbose_name = 'دفعة يدوية'
+        verbose_name_plural = 'دفعات يدوية'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Manual {self.method} - {self.booking_id} - {self.amount}"
+
+    def save(self, *args, **kwargs):
+        """عند اعتماد الدفعة اليدوية، حدّث حالة الحجز إلى مدفوع."""
+        prev_status = None
+        if self.pk:
+            try:
+                prev_status = ManualPayment.objects.only('status').get(pk=self.pk).status
+            except ManualPayment.DoesNotExist:
+                prev_status = None
+        super().save(*args, **kwargs)
+        # إذا أصبحت الحالة معتمدة، حدّث حالة الحجز للدفع والتأكيد
+        if self.status == 'approved' and self.booking:
+            changed = False
+            if self.booking.payment_status != 'paid':
+                self.booking.payment_status = 'paid'
+                changed = True
+            if self.booking.status != 'cancelled' and self.booking.status != 'confirmed':
+                self.booking.status = 'confirmed'
+                changed = True
+            if changed:
+                self.booking.save(update_fields=['payment_status', 'status'])

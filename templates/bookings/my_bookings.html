@@ -3,11 +3,12 @@
 {% block title %}حجوزاتي{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-  <h3 class="mb-3"><i class="fas fa-calendar me-2"></i>حجوزاتي</h3>
+<div class="container my-3">
+  <h5 class="mb-3"><i class="fas fa-calendar me-2"></i>حجوزاتي</h5>
   {% if bookings %}
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
+    <!-- Desktop/tablet table -->
+    <div class="table-responsive hide-on-mobile">
+      <table class="table table-hover table-sm align-middle">
         <thead>
           <tr>
             <th>#</th>
@@ -61,10 +62,47 @@
         </tbody>
       </table>
     </div>
-  {% else %}
-    <div class="alert alert-info">
-      لا توجد حجوزات حتى الآن.
+
+    <!-- Mobile cards -->
+    <div class="show-on-mobile">
+      {% for b in bookings %}
+      <div class="card mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fw-bold">حجز #{{ b.id }}</div>
+            <div>
+              {% if b.payment_status == 'paid' %}
+                <span class="badge bg-success">مدفوع</span>
+              {% elif b.payment_status == 'failed' %}
+                <span class="badge bg-danger">فشل</span>
+              {% else %}
+                <span class="badge bg-secondary">معلق</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="small text-muted mb-1">{{ b.bed.room.apartment.name }} • {{ b.bed.room.name }} • سرير {{ b.bed.bed_number }}</div>
+          <div class="small mb-1">{{ b.start_date }} → {{ b.end_date }}</div>
+          <div class="fw-bold mb-2">{{ b.total_amount }} ريال</div>
+          <div class="d-flex gap-2">
+            {% if b.payment_status == 'paid' %}
+              <a class="btn btn-success btn-sm flex-fill" href="{% url 'bookings:chat' b.id %}">شات مع البايع</a>
+            {% else %}
+              <a class="btn btn-primary btn-sm flex-fill" href="{% url 'payments:payment' b.id %}">إتمام الدفع</a>
+            {% endif %}
+            {% if b.status == 'confirmed' %}
+              <span class="badge bg-primary align-self-center">مؤكد</span>
+            {% elif b.status == 'cancelled' %}
+              <span class="badge bg-warning align-self-center">ملغي</span>
+            {% else %}
+              <span class="badge bg-info align-self-center">جديد</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
+  {% else %}
+    <div class="alert alert-info">لا توجد حجوزات حتى الآن.</div>
   {% endif %}
 </div>
 {% endblock %}
