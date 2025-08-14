@@ -24,16 +24,23 @@ def user_chats(request):
         })
     return render(request, 'bookings/user_chats.html', {'chats': chats})
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView, FormView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from listings.models import Bed
-from .models import Booking, Message
+from .models import Booking, Message, BookingOrder
 from .forms import BookingForm
 import re
+import json
+from django.http import JsonResponse
+from django.conf import settings
+import logging
+import stripe
+logger = logging.getLogger(__name__)
+from datetime import date
 
 
 class MyBookingsView(LoginRequiredMixin, ListView):
@@ -84,6 +91,117 @@ class BookBedView(LoginRequiredMixin, FormView):
     
     def get_success_url(self):
         return reverse_lazy('bookings:my_bookings')
+
+
+class CreateMultiBookingView(LoginRequiredMixin, View):
+    """إنشاء عدة حجوزات لأسرة متعددة داخل نفس الشقة وبنفس التواريخ، ثم تجهيز الدفع كطلب واحد."""
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        try:
+            bed_ids = data.get('bed_ids') or []
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+            payment_method = (data.get('payment_method') or 'stripe').lower()
+
+            if not isinstance(bed_ids, list) or not bed_ids:
+                return JsonResponse({'error': 'يجب تحديد الأسرة'}, status=400)
+            if not start_date or not end_date:
+                return JsonResponse({'error': 'برجاء تحديد تاريخ البداية والنهاية'}, status=400)
+
+            # Parse dates
+            try:
+                start_dt = date.fromisoformat(start_date)
+                end_dt = date.fromisoformat(end_date)
+            except Exception:
+                return JsonResponse({'error': 'صيغة التاريخ غير صحيحة. استخدم YYYY-MM-DD'}, status=400)
+            if end_dt < start_dt:
+                return JsonResponse({'error': 'تاريخ النهاية يجب أن يكون بعد أو يساوي تاريخ البداية'}, status=400)
+
+            beds = list(Bed.objects.filter(id__in=bed_ids))
+            if len(beds) != len(bed_ids):
+                return JsonResponse({'error': 'بعض الأسرة المحددة غير موجودة'}, status=400)
+            # تحقق من توفر كل سرير بدون الاعتماد على اسم حقل محدد
+            unavailable = []
+            for b in beds:
+                is_available = True
+                if hasattr(b, 'is_available'):
+                    is_available = bool(getattr(b, 'is_available'))
+                elif hasattr(b, 'status'):
+                    is_available = getattr(b, 'status') == 'available'
+                if not is_available:
+                    unavailable.append(b.id)
+            if unavailable:
+                return JsonResponse({'error': 'بعض الأسرة غير متاحة', 'beds': unavailable}, status=400)
+            apartment_ids = {b.room.apartment_id for b in beds}
+            if len(apartment_ids) != 1:
+                return JsonResponse({'error': 'يجب أن تكون كل الأسرة داخل نفس الشقة'}, status=400)
+
+            # إنشاء الحجوزات
+            bookings = []
+            for bed in beds:
+                booking = Booking.objects.create(
+                    user=request.user,
+                    bed=bed,
+                    start_date=start_dt,
+                    end_date=end_dt,
+                    monthly_price=bed.monthly_price,
+                    total_amount=bed.monthly_price,
+                )
+                bookings.append(booking)
+            total_commission = sum(float(getattr(b, 'commission_amount', 150)) for b in bookings)
+            order = BookingOrder.objects.create(user=request.user, total_amount=total_commission, status='pending')
+            for b in bookings:
+                b.order = order
+                b.save(update_fields=['order'])
+
+            if payment_method == 'vodafone':
+                # وجّه لصفحة الدفع اليدوي الخاصة بالأمر لعرض التعليمات وروابط كل حجز
+                from django.urls import reverse
+                manual_url = reverse('payments:multi_manual_payment', args=[order.id])
+                return JsonResponse({'manual_url': manual_url, 'order_id': order.id})
+            else:
+                # Stripe
+                secret = (settings.STRIPE_SECRET_KEY or '').strip().strip('"').strip("'")
+                if not secret or not secret.startswith('sk_'):
+                    logger.error("Stripe SECRET key invalid or quoted. Raw value: %r", settings.STRIPE_SECRET_KEY)
+                    return JsonResponse({'error': 'Stripe secret key is invalid. تأكد من إزالة علامات الاقتباس من .env وإعادة تشغيل السيرفر.'}, status=500)
+
+                try:
+                    stripe.api_key = secret
+                    line_items = []
+                    for b in bookings:
+                        line_items.append({
+                            'price_data': {
+                                'currency': 'egp',
+                                'product_data': {
+                                    'name': f'عمولة المنصة لحجز سرير #{b.bed_id}',
+                                },
+                                'unit_amount': int(float(getattr(b, 'commission_amount', 150)) * 100),
+                            },
+                            'quantity': 1,
+                        })
+
+                    success_url = request.build_absolute_uri('/payments/success/') + '?session_id={CHECKOUT_SESSION_ID}'
+                    cancel_url = request.build_absolute_uri('/payments/cancel/')
+                    session = stripe.checkout.Session.create(
+                        payment_method_types=['card'],
+                        line_items=line_items,
+                        mode='payment',
+                        success_url=success_url,
+                        cancel_url=cancel_url,
+                        metadata={'order_id': order.id},
+                    )
+                    return JsonResponse({'session_url': session.url})
+                except Exception as e:
+                    logger.exception("Stripe order checkout session creation failed (order_id=%s)", order.id)
+                    return JsonResponse({'error': str(e)}, status=500)
+        except Exception as e:
+            logger.exception("Unexpected error in CreateMultiBookingView")
+            return JsonResponse({'error': 'خطأ غير متوقع: ' + str(e)}, status=500)
 
 
 @login_required

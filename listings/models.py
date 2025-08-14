@@ -122,6 +122,18 @@ class ApartmentImage(models.Model):
         upload_to='apartments/gallery/',
         verbose_name='الصورة'
     )
+    CATEGORY_CHOICES = [
+        ('bathroom', 'الحمام'),
+        ('kitchen', 'المطبخ'),
+        ('living', 'الصالة'),
+        ('other', 'أخرى'),
+    ]
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default='other',
+        verbose_name='التصنيف'
+    )
     
     caption = models.CharField(
         max_length=200,

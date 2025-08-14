@@ -20,7 +20,7 @@
                         سيتم تسجيل خروجك من حسابك في سكنك
                     </p>
                     
-                    <form method="post" action="{% url 'account_logout' %}">
+                    <form method="post" action="{% url 'accounts:logout' %}">
                         {% csrf_token %}
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-warning">

@@ -3,6 +3,12 @@ from .models import ManualPayment
 
 
 class ManualPaymentForm(forms.ModelForm):
+    # حقل إضافي غير مرتبط بالموديل لتسجيل وقت التحويل
+    transfer_time = forms.CharField(
+        required=False,
+        label='وقت التحويل',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'مثال: 14:35'})
+    )
     class Meta:
         model = ManualPayment
         fields = [

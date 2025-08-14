@@ -33,8 +33,8 @@
       <ul class="list-unstyled small mb-0">
         <li class="mb-1"><strong>المبلغ:</strong> {{ manual_payment.amount }} جنيه</li>
         <li class="mb-1"><strong>رقم المُرسل:</strong> {{ manual_payment.sender_phone }}</li>
-        {% if manual_payment.transaction_reference %}
-          <li class="mb-1"><strong>رقم العملية:</strong> {{ manual_payment.transaction_reference }}</li>
+        {% if manual_payment.transaction_ref %}
+          <li class="mb-1"><strong>رقم العملية:</strong> {{ manual_payment.transaction_ref }}</li>
         {% endif %}
         <li class="mb-1"><strong>تاريخ الإرسال:</strong> {{ manual_payment.created_at }}</li>
       </ul>
@@ -46,6 +46,7 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>

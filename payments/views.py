@@ -2,7 +2,7 @@ import stripe
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from bookings.models import Booking
+from bookings.models import Booking, BookingOrder
 
 @csrf_exempt
 def create_checkout_session(request):
@@ -15,8 +15,9 @@ def create_checkout_session(request):
         booking = Booking.objects.get(id=booking_id)
     except Booking.DoesNotExist:
         return JsonResponse({'error': 'الحجز غير موجود'}, status=404)
-    if not hasattr(booking, 'total_amount') or booking.total_amount is None or booking.total_amount <= 0:
-        return JsonResponse({'error': 'سعر الحجز غير صحيح'}, status=400)
+    # نستخدم عمولة المنصة فقط
+    if not hasattr(booking, 'commission_amount') or booking.commission_amount is None or booking.commission_amount <= 0:
+        return JsonResponse({'error': 'قيمة العمولة غير صالحة'}, status=400)
 
     # Enhanced: validate and set Stripe secret key, with logging
     import logging
@@ -34,9 +35,9 @@ def create_checkout_session(request):
                 'price_data': {
                     'currency': 'egp',
                     'product_data': {
-                        'name': f'حجز رقم {booking.id}',
+                        'name': f'عمولة المنصة لحجز سرير #{booking.bed_id}',
                     },
-                    'unit_amount': int(float(booking.total_amount) * 100),
+                    'unit_amount': int(float(booking.commission_amount) * 100),
                 },
                 'quantity': 1,
             }],
@@ -48,6 +49,79 @@ def create_checkout_session(request):
         return JsonResponse({'session_url': session.url})
     except Exception as e:
         logger.exception("Stripe checkout session creation failed (booking_id=%s)", booking_id)
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def create_order_checkout_session(request):
+    """إنشاء جلسة دفع Stripe لعدة حجوزات في أمر واحد."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    import json
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    ids = data.get('booking_ids') or []
+    if not isinstance(ids, list) or not ids:
+        return JsonResponse({'error': 'booking_ids required'}, status=400)
+
+    # اجلب الحجوزات وتأكد أنها للمستخدم الحالي
+    bookings = list(Booking.objects.filter(id__in=ids))
+    if not bookings:
+        return JsonResponse({'error': 'لا توجد حجوزات'}, status=404)
+    user = bookings[0].user
+    # تأكد أن جميع الحجوزات لنفس المستخدم
+    if any(b.user_id != user.id for b in bookings):
+        return JsonResponse({'error': 'جميع الحجوزات يجب أن تخص نفس المستخدم'}, status=400)
+
+    # احسب إجمالي العمولات فقط
+    try:
+        total = sum([float(getattr(b, 'commission_amount', 150)) for b in bookings])
+    except Exception:
+        return JsonResponse({'error': 'مبالغ غير صحيحة'}, status=400)
+    if total <= 0:
+        return JsonResponse({'error': 'إجمالي غير صالح'}, status=400)
+
+    # أنشئ أمر الحجز
+    order = BookingOrder.objects.create(user=user, total_amount=total, status='pending')
+    for b in bookings:
+        b.order = order
+        b.save(update_fields=['order'])
+
+    # تهيئة Stripe
+    import logging
+    logger = logging.getLogger('payments')
+    secret = (settings.STRIPE_SECRET_KEY or '').strip().strip('"').strip("'")
+    if not secret or not secret.startswith('sk_'):
+        logger.error("Stripe SECRET key invalid or quoted. Raw value: %r", settings.STRIPE_SECRET_KEY)
+        return JsonResponse({'error': 'Stripe secret key is invalid. تأكد من إزالة علامات الاقتباس من .env وأعد تشغيل السيرفر.'}, status=500)
+    try:
+        stripe.api_key = secret
+        # ضع كل حجز كبند مستقل لشفافية الفاتورة
+        line_items = []
+        for b in bookings:
+            line_items.append({
+                'price_data': {
+                    'currency': 'egp',
+                    'product_data': {
+                        'name': f'عمولة المنصة لحجز سرير #{b.bed_id}',
+                    },
+                    'unit_amount': int(float(getattr(b, 'commission_amount', 150)) * 100),
+                },
+                'quantity': 1,
+            })
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=request.build_absolute_uri('/payments/success/') + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.build_absolute_uri('/payments/cancel/'),
+            metadata={'order_id': order.id},
+        )
+        return JsonResponse({'session_url': session.url})
+    except Exception as e:
+        logger.exception("Stripe order checkout session creation failed (order_id=%s)", order.id)
         return JsonResponse({'error': str(e)}, status=500)
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -84,6 +158,27 @@ class PaymentView(LoginRequiredMixin, TemplateView):
             'booking': booking,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'manual_payment_url': f"/payments/manual/{booking.id}/",
+        })
+        return context
+
+
+class MultiManualPaymentView(LoginRequiredMixin, TemplateView):
+    """عرض صفحة الدفع اليدوي لحجز متعدد (أمر حجوزات)."""
+    template_name = 'payments/manual_order.html'
+
+    def get_context_data(self, **kwargs):
+        from bookings.models import BookingOrder
+        context = super().get_context_data(**kwargs)
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(BookingOrder, id=order_id, user=self.request.user)
+        bookings = list(order.bookings.all())
+        total_commission = sum(float(getattr(b, 'commission_amount', 150)) for b in bookings)
+        context.update({
+            'order': order,
+            'bookings': bookings,
+            'total_commission': total_commission,
+            'warning': 'تنبيه هام: الدفع هنا هو عمولة المنصة فقط (150 جنيه لكل سرير). هذا ليس سعر السرير.',
+            'receiver_number': ManualPaymentView.VODAFONE_CASH_RECEIVER,
         })
         return context
 
@@ -182,7 +277,7 @@ class StripeWebhookView(View):
 class ManualPaymentView(LoginRequiredMixin, View):
     """الدفع اليدوي عبر فودافون كاش: عرض التعليمات وتسجيل إثبات الدفع"""
 
-    VODAFONE_CASH_RECEIVER = "01069476417"
+    VODAFONE_CASH_RECEIVER = "01551954315"
 
     def get(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id, user=request.user)
@@ -209,6 +304,17 @@ class ManualPaymentView(LoginRequiredMixin, View):
             mp = form.save(commit=False)
             mp.booking = booking
             mp.status = 'pending'
+            # خزّن وقت التحويل في ملاحظات المشرف بدون تعديل الموديل
+            transfer_time = form.cleaned_data.get('transfer_time')
+            notes_parts = []
+            if transfer_time:
+                notes_parts.append(f"وقت التحويل: {transfer_time}")
+            if mp.transaction_ref:
+                notes_parts.append(f"رقم العملية: {mp.transaction_ref}")
+            if mp.sender_phone:
+                notes_parts.append(f"هاتف المُرسل: {mp.sender_phone}")
+            if notes_parts:
+                mp.admin_notes = (mp.admin_notes + "\n" if mp.admin_notes else "") + " | ".join(notes_parts)
             mp.save()
             messages.success(request, 'تم إرسال إثبات الدفع. سيتم مراجعته من قبل الإدارة قريباً.')
             return redirect('payments:manual_payment_status', booking_id=booking.id)
@@ -282,16 +388,36 @@ class PaymentSuccessView(LoginRequiredMixin, TemplateView):
         session_id = self.request.GET.get('session_id')
         
         if session_id:
-            # التحقق من حالة الدفع مباشرة من Stripe
             try:
+                secret = (settings.STRIPE_SECRET_KEY or '').strip().strip('"').strip("'")
+                stripe.api_key = secret
                 session = stripe.checkout.Session.retrieve(session_id)
+                order_id = session.metadata.get('order_id')
                 booking_id = session.metadata.get('booking_id')
-                
-                if booking_id and session.payment_status == 'paid':
-                    booking = Booking.objects.get(id=booking_id, user=self.request.user)
-                    
-                    # تحديث حالة الحجز إذا لم يتم تحديثها بعد
-                    if booking.payment_status != 'paid':
+                if order_id:
+                    # معالجة أمر متعدد الحجوزات
+                    order = get_object_or_404(BookingOrder, id=order_id, user=self.request.user)
+                    if session.payment_status == 'paid' and order.status != 'paid':
+                        order.status = 'paid'
+                        order.save(update_fields=['status'])
+                        for b in order.bookings.all():
+                            b.payment_status = 'paid'
+                            b.status = 'confirmed'
+                            b.save(update_fields=['payment_status', 'status'])
+                            Payment.objects.get_or_create(
+                                booking=b,
+                                defaults={
+                                    'stripe_payment_intent_id': session.payment_intent,
+                                    'amount': b.commission_amount,
+                                    'currency': 'EGP',
+                                    'status': 'succeeded',
+                                }
+                            )
+                        context['order'] = order
+                        context['bookings'] = list(order.bookings.all())
+                elif booking_id:
+                    booking = get_object_or_404(Booking, id=booking_id, user=self.request.user)
+                    if session.payment_status == 'paid':
                         booking.payment_status = 'paid'
                         booking.status = 'confirmed'
                         booking.save()
@@ -302,7 +428,7 @@ class PaymentSuccessView(LoginRequiredMixin, TemplateView):
                             booking=booking,
                             defaults={
                                 'stripe_payment_intent_id': session.payment_intent,
-                                'amount': booking.total_amount,
+                                'amount': booking.commission_amount,
                                 'currency': 'EGP',
                                 'status': 'succeeded',
                             }

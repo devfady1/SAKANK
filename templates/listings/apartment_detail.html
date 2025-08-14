@@ -118,7 +118,44 @@
             <!-- الغرف والأسرة -->
             <div class="card shadow-sm" id="rooms">
                 <div class="card-body">
-                    <h3 class="card-title mb-4">الغرف المتاحة</h3>
+                    <h3 class="card-title mb-3">الغرف المتاحة</h3>
+
+                    {% if user.is_authenticated and user.user_type == 'buyer' %}
+                    <div id="multi-booking-section" class="card mt-4 p-3">
+          <h5 class="mb-3">حجز متعدد للأسرة المختارة</h5>
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">تاريخ البداية</label>
+              <input type="date" id="multi-start-date" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">تاريخ النهاية</label>
+              <input type="date" id="multi-end-date" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">عدد الأسرة المختارة: <span id="selected-count">0</span></div>
+              <div class="fw-bold">إجمالي العمولة: <span id="commission-total">0</span> ج.م</div>
+              <div class="text-warning small mt-1">تنبيه: الدفع عمولة المنصة فقط (150 ج.م لكل سرير)</div>
+            </div>
+            <div class="col-md-3 text-end">
+              <button id="multi-book-btn" class="btn btn-primary" disabled>احجز الأسرة المختارة</button>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-12">
+              <label class="form-label d-block mb-2">طريقة الدفع</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="multi-payment-method" id="pm-stripe" value="stripe" checked>
+                <label class="form-check-label" for="pm-stripe">Stripe (بطاقة)</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="multi-payment-method" id="pm-vodafone" value="vodafone">
+                <label class="form-check-label" for="pm-vodafone">Vodafone Cash</label>
+              </div>
+            </div>
+          </div>
+        </div>
+                    {% endif %}
                     {% for room in rooms %}
                         <div class="border rounded p-3 mb-3">
                             <div class="row align-items-center">
@@ -147,6 +184,9 @@
                                         <table class="table table-sm">
                                             <thead>
                                                 <tr>
+                                                    {% if user.is_authenticated and user.user_type == 'buyer' %}
+                                                    <th style="width:36px;">اختيار</th>
+                                                    {% endif %}
                                                     <th>رقم السرير</th>
                                                     <th>السعر الشهري</th>
                                                     <th>الحالة</th>
@@ -156,6 +196,13 @@
                                             <tbody>
                                                 {% for bed in room.beds.all %}
                                                     <tr>
+                                                        {% if user.is_authenticated and user.user_type == 'buyer' %}
+                                                        <td>
+                                                            {% if bed.is_available %}
+                                                            <input type="checkbox" class="bed-checkbox" value="{{ bed.id }}" />
+                                                            {% endif %}
+                                                        </td>
+                                                        {% endif %}
                                                         <td>{{ bed.bed_number }}</td>
                                                         <td>{{ bed.monthly_price }} جنيه</td>
                                                         <td>
@@ -203,3 +250,85 @@
 </div>
 {% endblock %}
 {% endautoescape %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  }
+  const COMMISSION = 150;
+  const checkboxes = Array.from(document.querySelectorAll('.bed-checkbox'));
+  const selectedCountEl = document.getElementById('selected-count');
+  const totalCommissionEl = document.getElementById('commission-total');
+  const multiBookBtn = document.getElementById('multi-book-btn');
+  const startDateInput = document.getElementById('multi-start-date');
+  const endDateInput = document.getElementById('multi-end-date');
+  const paymentRadios = document.getElementsByName('multi-payment-method');
+
+  function updateSummary(){
+    const count = checkboxes.filter(cb => cb.checked).length;
+    selectedCountEl && (selectedCountEl.textContent = count);
+    totalCommissionEl && (totalCommissionEl.textContent = count * COMMISSION);
+    multiBookBtn && (multiBookBtn.disabled = !(count > 0 && startDateInput.value && endDateInput.value));
+  }
+
+  checkboxes.forEach(cb => cb.addEventListener('change', updateSummary));
+  startDateInput && startDateInput.addEventListener('change', updateSummary);
+  endDateInput && endDateInput.addEventListener('change', updateSummary);
+  updateSummary();
+
+  multiBookBtn.addEventListener('click', async () => {
+    const start = startDateInput.value;
+    const end = endDateInput.value;
+    const selected = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value));
+    let payment_method = 'stripe';
+    for (const r of paymentRadios) { if (r.checked) { payment_method = r.value; break; } }
+    if (!start || !end) {
+      alert('برجاء تحديد تاريخ البداية والنهاية');
+      return;
+    }
+    if (selected.length === 0) {
+      alert('اختر سرير واحد على الأقل');
+      return;
+    }
+    try {
+      const res = await fetch('/bookings/create-multi/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': (getCookie('csrftoken') || '{{ csrf_token }}')
+        },
+        body: JSON.stringify({ bed_ids: selected, start_date: start, end_date: end, payment_method })
+      });
+      let data = null;
+      const ct = res.headers.get('Content-Type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        if (!res.ok) {
+          alert('فشل الطلب (' + res.status + ').\n' + text.slice(0, 300));
+          return;
+        }
+      }
+      if (!res.ok) {
+        alert((data && data.error) || 'حدث خطأ أثناء إنشاء عملية الحجز.');
+        return;
+      }
+      if (data.session_url) {
+        window.location.href = data.session_url;
+      } else if (data.manual_url) {
+        window.location.href = data.manual_url;
+      }
+    } catch (e) {
+      console.error(e);
+      alert('حدث خطأ غير متوقع.');
+    }
+  });
+});
+</script>
+{% endblock %}

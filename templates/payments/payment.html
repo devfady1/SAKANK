@@ -11,6 +11,9 @@
           <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>الدفع الآمن</h6>
         </div>
         <div class="card-body py-3">
+          <div class="alert alert-warning small" role="alert">
+            تنبيه هام: المبلغ الذي ستدفعه هو عمولة المنصة فقط (150 جنيه لكل سرير). هذا ليس سعر السرير ولا يعتبر إيجارًا. الإيجار يُدفع مباشرةً لصاحب الشقة.
+          </div>
           <div class="mb-2">
             <label class="form-label fw-bold small">اختر طريقة الدفع:</label>
             <select id="payment-method" class="form-select form-select-sm">
@@ -57,7 +60,7 @@
                 <a href="{% url 'bookings:chat' booking.id %}" class="btn btn-sm btn-success ms-2">شات مع البايع</a>
               {% endif %}
             </li>
-            <li class="mb-1"><strong>المبلغ الإجمالي:</strong> {{ booking.total_amount }} ريال</li>
+            <li class="mb-1"><strong>عمولة المنصة المستحقة:</strong> {{ booking.commission_amount|default:150 }} جنيه</li>
           </ul>
         </div>
       </div>

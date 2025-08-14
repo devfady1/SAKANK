@@ -9,8 +9,59 @@ from django.contrib.auth.views import (
 )
 class PasswordResetView(DjangoPasswordResetView):
     template_name = 'accounts/password_reset.html'
-    email_template_name = 'accounts/password_reset_email.html'
+    # نرسل نسخة HTML جميلة + نسخة نصية بديلة
+    email_template_name = 'accounts/password_reset_email.txt'
+    html_email_template_name = 'accounts/password_reset_email.html'
+    # سطر العنوان المخصص
+    subject_template_name = 'accounts/password_reset_subject.txt'
     success_url = '/accounts/password-reset/done/'
+
+    def post(self, request, *args, **kwargs):
+        """تخصيص تدفق الإرسال:
+        - لو لا يوجد حساب بهذا البريد -> صفحة تخبره بعدم وجود حساب.
+        - لو أكثر من حساب بنفس البريد -> صفحة اختيار الحساب المطلوب.
+        - لو حساب واحد فقط -> إرسال الرابط مباشرة.
+        """
+        from django.contrib.auth import get_user_model
+        email = (request.POST.get('email') or '').strip()
+        selected_user_id = request.POST.get('selected_user_id')
+
+        User = get_user_model()
+        users_qs = User._default_manager.filter(email__iexact=email, is_active=True)
+        count = users_qs.count()
+
+        if count == 0:
+            return render(request, 'accounts/password_reset_no_account.html', {'email': email})
+
+        if count > 1 and not selected_user_id:
+            return render(request, 'accounts/password_reset_select_user.html', {
+                'email': email,
+                'users': users_qs,
+            })
+
+        # تحديد المستخدمين المسموح إرسال الإيميل لهم
+        if selected_user_id:
+            try:
+                allowed_users = [users_qs.get(pk=selected_user_id)]
+            except User.DoesNotExist:
+                messages.error(request, 'حدث خطأ في اختيار الحساب. يرجى المحاولة مرة أخرى.')
+                return redirect('accounts:password_reset')
+        else:
+            allowed_users = list(users_qs)
+
+        # استدعاء النموذج الافتراضي ثم نقيد المستخدمين الذين سيُرسل لهم
+        form = self.get_form()
+
+        # التأكد من صحة المدخلات لتهيئة cleaned_data
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        # نُقَيِّد get_users لإرجاع المستخدم/المستخدمين المحددين فقط
+        def get_only_selected_users(_self, email_param):
+            return allowed_users
+
+        form.get_users = get_only_selected_users.__get__(form, form.__class__)
+        return self.form_valid(form)
 
 class PasswordResetDoneView(DjangoPasswordResetDoneView):
     template_name = 'accounts/password_reset_done.html'
@@ -86,6 +137,10 @@ class LogoutView(DjangoLogoutView):
     def dispatch(self, request, *args, **kwargs):
         messages.success(request, 'تم تسجيل خروجك بنجاح.')
         return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request, *args, **kwargs):
+        """Allow GET requests for logout"""
+        return self.post(request, *args, **kwargs)
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

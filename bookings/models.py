@@ -27,6 +27,16 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='المستخدم'
     )
+
+    # أمر (تجميعة) يمكن أن يضم عدة حجوزات في دفعة واحدة
+    order = models.ForeignKey(
+        'BookingOrder',
+        on_delete=models.CASCADE,
+        related_name='bookings',
+        null=True,
+        blank=True,
+        verbose_name='الأمر'
+    )
     
     bed = models.ForeignKey(
         Bed,
@@ -53,6 +63,14 @@ class Booking(models.Model):
         max_digits=10,
         decimal_places=2,
         verbose_name='المبلغ الإجمالي'
+    )
+    
+    # عمولة المنصة لكل سرير (لا يدفع المستخدم سعر السرير عبر المنصة)
+    commission_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=150,
+        verbose_name='عمولة السرير'
     )
     
     status = models.CharField(
@@ -107,6 +125,51 @@ class Booking(models.Model):
             self.bed.status = 'available'
             self.bed.save()
         super().save(*args, **kwargs)
+
+
+class BookingOrder(models.Model):
+    """أمر حجز يضم عدة أسرة ليدفعها الطالب في عملية دفع واحدة."""
+
+    STATUS_CHOICES = [
+        ('pending', 'في الانتظار'),
+        ('paid', 'مدفوع'),
+        ('failed', 'فشل'),
+        ('cancelled', 'ملغي'),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='booking_orders',
+        verbose_name='المستخدم'
+    )
+
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name='الإجمالي'
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='الحالة'
+    )
+
+    notes = models.TextField(blank=True, verbose_name='ملاحظات')
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإنشاء')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='تاريخ التحديث')
+
+    class Meta:
+        verbose_name = 'أمر حجز'
+        verbose_name_plural = 'أوامر الحجز'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.user} - {self.total_amount}"
 
 class Message(models.Model):
     """نموذج الرسائل بين الطالب وصاحب السكن"""
