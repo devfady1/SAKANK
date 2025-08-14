@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ code }} | {{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .error-hero {
+    background: radial-gradient(1200px 600px at 100% 0%, rgba(124, 58, 237, 0.20), transparent 60%),
+                radial-gradient(1000px 500px at 0% 100%, rgba(59, 130, 246, 0.18), transparent 60%),
+                linear-gradient(135deg, #6d28d9 0%, #3b82f6 100%);
+    color: #fff;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.25);
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.9);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    backdrop-filter: blur(6px);
+  }
+  .error-code {
+    font-weight: 900;
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    line-height: 1;
+    background: linear-gradient(135deg, #e9d5ff, #bfdbfe);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .btn-rounded { border-radius: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="mt-4">
+  <div class="container">
+    <div class="p-4 p-md-5 error-hero text-center reveal" data-delay="0">
+      <div class="row align-items-center g-4">
+        <div class="col-12">
+          <div class="error-code">{{ code }}</div>
+          <h1 class="mt-2 fw-bold">{{ title }}</h1>
+          <p class="lead text-white-75">{{ message }}</p>
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-3">
+            <a href="/" class="btn btn-light btn-rounded px-4"><i class="fa fa-home ms-1"></i>الصفحة الرئيسية</a>
+            <a href="javascript:history.back()" class="btn btn-outline-light btn-rounded px-4">رجوع</a>
+            <a href="{% url 'pages:contact' %}" class="btn btn-dark btn-rounded px-4"><i class="fa fa-envelope ms-1"></i>تواصل معنا</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card p-4 p-md-5 mt-4 reveal" data-delay="150">
+      <h5 class="fw-bold mb-2">نصائح</h5>
+      <ul class="mb-0">
+        <li class="mb-2"><i class="fa fa-link ms-2 text-primary"></i>تحقق من صحة الرابط أو المعلمات.</li>
+        <li class="mb-2"><i class="fa fa-sync ms-2 text-primary"></i>أعد تحميل الصفحة.</li>
+        <li class="mb-2"><i class="fa fa-headset ms-2 text-primary"></i>راسلنا إن استمرت المشكلة.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}
