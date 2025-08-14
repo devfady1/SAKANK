@@ -1,0 +1,34 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.log
+
+# === Environments ===
+.venv/
+venv/
+.env
+
+# === Django ===
+# Local SQLite database (do NOT commit)
+db.sqlite3
+# Local SQLite journal file
+*.sqlite3
+*.sqlite3-journal
+stripe_payments.log
+
+# Migrations cache
+*/migrations/__pycache__/
+
+# Static & media (optional: unignore if you really want them in repo)
+staticfiles/
+media/
+
+# IDE/editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
