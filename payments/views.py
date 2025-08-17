@@ -277,7 +277,7 @@ class StripeWebhookView(View):
 class ManualPaymentView(LoginRequiredMixin, View):
     """الدفع اليدوي عبر فودافون كاش: عرض التعليمات وتسجيل إثبات الدفع"""
 
-    VODAFONE_CASH_RECEIVER = "01551954315"
+    VODAFONE_CASH_RECEIVER = "01069476417"
 
     def get(self, request, booking_id):
         booking = get_object_or_404(Booking, id=booking_id, user=request.user)

@@ -30,7 +30,7 @@
               <td>{{ b.bed.room.name }}</td>
               <td>{{ b.bed.bed_number }}</td>
               <td>{{ b.start_date }} → {{ b.end_date }}</td>
-              <td>{{ b.total_amount }} ريال</td>
+              <td>{{ b.total_amount }} جنيه</td>
               <td>
                 {% if b.payment_status == 'paid' %}
                   <span class="badge bg-success">مدفوع</span>
@@ -82,7 +82,7 @@
           </div>
           <div class="small text-muted mb-1">{{ b.bed.room.apartment.name }} • {{ b.bed.room.name }} • سرير {{ b.bed.bed_number }}</div>
           <div class="small mb-1">{{ b.start_date }} → {{ b.end_date }}</div>
-          <div class="fw-bold mb-2">{{ b.total_amount }} ريال</div>
+          <div class="fw-bold mb-2">{{ b.total_amount }} جنيه</div>
           <div class="d-flex gap-2">
             {% if b.payment_status == 'paid' %}
               <a class="btn btn-success btn-sm flex-fill" href="{% url 'bookings:chat' b.id %}">شات مع البايع</a>
